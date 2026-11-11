@@ -1,0 +1,5 @@
+// Defaults for unsigned simulator builds. Set device signing in Signing.local.xcconfig.
+MEDTRACKER_TEAM =
+MEDTRACKER_BUNDLE_ID = com.example.medtracker
+MEDTRACKER_APP_GROUP = group.$(MEDTRACKER_BUNDLE_ID)
+#include? "Signing.local.xcconfig"

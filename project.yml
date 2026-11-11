@@ -1,0 +1,130 @@
+name: MedTracker
+options:
+  minimumXcodeGenVersion: 2.40.0
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    CODE_SIGN_STYLE: Automatic
+    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.1.0"
+    GENERATE_INFOPLIST_FILE: false
+    ENABLE_USER_SCRIPT_SANDBOXING: true
+    SWIFT_EMIT_LOC_STRINGS: true
+    DEVELOPMENT_TEAM: "$(MEDTRACKER_TEAM)"
+targets:
+  MedTracker:
+    type: application
+    platform: iOS
+    sources:
+      - MedTracker
+      - Shared
+    info:
+      path: Config/App-Info.plist
+      properties:
+        CFBundleDisplayName: MedTracker
+        MedTrackerAppGroup: "$(MEDTRACKER_APP_GROUP)"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: Config/App.entitlements
+      properties:
+        com.apple.developer.family-controls: true
+        com.apple.developer.usernotifications.time-sensitive: true
+        com.apple.security.application-groups:
+          - "$(MEDTRACKER_APP_GROUP)"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "$(MEDTRACKER_BUNDLE_ID)"
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.healthcare-fitness
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - target: MedTrackerMonitor
+      - target: MedTrackerShield
+  MedTrackerMonitor:
+    type: app-extension
+    platform: iOS
+    sources:
+      - MonitorExtension
+      - Shared
+    info:
+      path: Config/Monitor-Info.plist
+      properties:
+        CFBundleDisplayName: MedTracker Monitor
+        MedTrackerAppGroup: "$(MEDTRACKER_APP_GROUP)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.deviceactivity.monitor-extension
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).ActivityMonitor"
+    entitlements:
+      path: Config/Monitor.entitlements
+      properties:
+        com.apple.developer.family-controls: true
+        com.apple.security.application-groups:
+          - "$(MEDTRACKER_APP_GROUP)"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "$(MEDTRACKER_BUNDLE_ID).monitor"
+        APPLICATION_EXTENSION_API_ONLY: true
+        SKIP_INSTALL: true
+  MedTrackerShield:
+    type: app-extension
+    platform: iOS
+    sources:
+      - ShieldExtension
+    info:
+      path: Config/Shield-Info.plist
+      properties:
+        CFBundleDisplayName: MedTracker Shield
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.ManagedSettingsUI.shield-configuration-service
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).ShieldConfigurationExtension"
+    entitlements:
+      path: Config/Shield.entitlements
+      properties:
+        com.apple.developer.family-controls: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "$(MEDTRACKER_BUNDLE_ID).shield"
+        APPLICATION_EXTENSION_API_ONLY: true
+        SKIP_INSTALL: true
+  MedTrackerUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - MedTrackerUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "$(MEDTRACKER_BUNDLE_ID).uitests"
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: MedTracker
+schemes:
+  MedTracker:
+    build:
+      targets:
+        MedTracker: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - MedTrackerUITests
+    archive:
+      config: Release
