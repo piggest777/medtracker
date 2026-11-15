@@ -1,42 +1,44 @@
-import XCTest
+import Foundation
 @testable import MedTrackerCore
+import Testing
 
-final class ScreenTimePermissionTests: XCTestCase {
-    func testUnresolvedAuthorizationPreservesSavedSelectionAndLastKnownGrant() {
+
+struct ScreenTimePermissionTests {
+    @Test("Unresolved authorization preserves saved state", arguments: [true, false])
+    func unresolvedAuthorizationPreservesSavedState(previouslyAuthorized: Bool) {
+        let savedSelection = Data([1, 2, 3])
+        let savedFingerprint: String? = previouslyAuthorized ? "registered" : nil
+
         var state = TrackerState()
-        state.previouslyAuthorized = true
-        state.selectionData = Data([1, 2, 3])
-        state.monitoringFingerprint = "registered"
+        state.previouslyAuthorized = previouslyAuthorized
+        state.selectionData = savedSelection
+        state.monitoringFingerprint = savedFingerprint
+
         ScreenTimePermission.notDetermined.reconcile(&state)
-        XCTAssertEqual(state.selectionData, Data([1, 2, 3]))
-        XCTAssertTrue(state.previouslyAuthorized)
-        XCTAssertEqual(state.monitoringFingerprint, "registered")
+
+        #expect(state.previouslyAuthorized == previouslyAuthorized)
+        #expect(state.selectionData == savedSelection)
+        #expect(state.monitoringFingerprint == savedFingerprint)
     }
 
-    func testUnresolvedAuthorizationDoesNotInventAGrant() {
-        var state = TrackerState()
-        state.selectionData = Data([1, 2, 3])
-        ScreenTimePermission.notDetermined.reconcile(&state)
-        XCTAssertFalse(state.previouslyAuthorized)
-        XCTAssertEqual(state.selectionData, Data([1, 2, 3]))
-    }
-
+    @Test
     func testConfirmedDenialClearsInvalidTokensAndMonitoring() {
         var state = TrackerState()
         state.previouslyAuthorized = true
         state.selectionData = Data([1, 2, 3])
         state.monitoringFingerprint = "registered"
         ScreenTimePermission.denied.reconcile(&state)
-        XCTAssertNil(state.selectionData)
-        XCTAssertNil(state.monitoringFingerprint)
-        XCTAssertFalse(state.previouslyAuthorized)
+        #expect(state.selectionData == nil)
+        #expect(state.monitoringFingerprint == nil)
+        #expect(!state.previouslyAuthorized)
     }
 
+    @Test
     func testApprovalKeepsSelection() {
         var state = TrackerState()
         state.selectionData = Data([1, 2, 3])
         ScreenTimePermission.approved.reconcile(&state)
-        XCTAssertEqual(state.selectionData, Data([1, 2, 3]))
-        XCTAssertTrue(state.previouslyAuthorized)
+        #expect(state.selectionData == Data([1, 2, 3]))
+        #expect(state.previouslyAuthorized)
     }
 }
