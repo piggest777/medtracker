@@ -38,7 +38,7 @@ enum AppEnvironment {
 }
 
 enum BlockingRuntime {
-    static let storeName = ManagedSettingsStore.Name("medication-reminders")
+    static let storeNameRawValue: String = "medication-reminders"
     static let prefix = "medtracker."
 
     static func selection(in state: TrackerState) -> FamilyActivitySelection {
@@ -106,6 +106,7 @@ enum BlockingRuntime {
 
     static func apply(_ state: TrackerState, now: Date = Date()) {
         guard !AppEnvironment.isUITesting else { return }
+        let storeName = ManagedSettingsStore.Name(storeNameRawValue)
         let settings = ManagedSettingsStore(named: storeName)
         guard shouldShield(state, now: now) else {
             Diagnostics.record("Shield", "clearing; approved=\(state.previouslyAuthorized) paused=\(state.preferences.blockingPaused) selected=\(hasSelection(state)) scheduleReady=\(state.monitoringFingerprint == fingerprint(state)) monitoringError=\(state.monitoringError != nil) testMode=\(state.practiceSession != nil) due=\(BlockingDemand.dueCount(state, now: now))")
@@ -123,6 +124,7 @@ enum BlockingRuntime {
     static func clearShields() {
         guard !AppEnvironment.isUITesting else { return }
         Diagnostics.record("Shield", "explicit clear after runtime failure")
+        let storeName = ManagedSettingsStore.Name(storeNameRawValue)
         ManagedSettingsStore(named: storeName).clearAllSettings()
     }
 

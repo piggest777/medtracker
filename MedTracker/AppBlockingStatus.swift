@@ -8,7 +8,8 @@ struct AppliedShields {
     var websites: Set<WebDomainToken> = []
 
     static func read(selection: FamilyActivitySelection) -> AppliedShields {
-        let shield = ManagedSettingsStore(named: BlockingRuntime.storeName).shield
+        let storeName = ManagedSettingsStore.Name(BlockingRuntime.storeNameRawValue)
+        let shield = ManagedSettingsStore(named: storeName).shield
         let appCategories = categories(in: shield.applicationCategories, selection: selection.categoryTokens)
         let webCategories = categories(in: shield.webDomainCategories, selection: selection.categoryTokens)
         return AppliedShields(applications: shield.applications ?? [],
