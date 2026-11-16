@@ -8,7 +8,7 @@ final class MedTrackerUITests: XCTestCase {
         app.launchArguments = ["--ui-testing", "--reset-ui-testing", "--seed-due-doses"]
         app.launch()
         XCTAssertTrue(app.staticTexts["2 due doses"].waitForExistence(timeout: 10))
-        app.tabBars.buttons["Settings"].tap()
+        app.buttons["Settings"].tap()
         let send = app.buttons["settings.test-alert"]
         for _ in 0..<5 {
             if send.isHittable { break }
@@ -39,7 +39,7 @@ final class MedTrackerUITests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 10))
         if !start.isHittable { app.swipeUp() }
         start.tap()
-        app.tabBars.buttons["Settings"].tap()
+        app.buttons["Settings"].tap()
         let testMode = app.buttons["settings.test-mode"]
         for _ in 0..<5 {
             if testMode.isHittable { break }
@@ -48,16 +48,27 @@ final class MedTrackerUITests: XCTestCase {
         testMode.tap()
         app.buttons["practice.start"].tap()
         XCTAssertTrue(app.staticTexts["2 practice doses due"].waitForExistence(timeout: 5))
-        app.buttons["practice.next-day"].tap()
+
+        let nextDay = app.buttons["practice.next-day"]
+
+        for _ in 0..<5 {
+            if nextDay.exists && nextDay.isHittable { break }
+            app.swipeUp()
+        }
+        guard nextDay.isHittable else {
+            XCTFail("Simulate next day was not tappable after scrolling")
+            return
+        }
+        nextDay.tap()
         XCTAssertTrue(app.descendants(matching: .any)["practice.complete"].firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["practice.due-now"].isEnabled)
         app.buttons["practice.due-now"].tap()
         XCTAssertTrue(app.staticTexts["2 practice doses due"].waitForExistence(timeout: 5))
         app.buttons["practice.end"].tap()
         XCTAssertTrue(app.buttons["practice.start"].waitForExistence(timeout: 5))
-        app.tabBars.buttons["Medications"].tap()
+        app.buttons["Medications"].tap()
         XCTAssertTrue(app.staticTexts["No medications yet"].waitForExistence(timeout: 5))
-        app.tabBars.buttons["History"].tap()
+        app.buttons["History"].tap()
         XCTAssertTrue(app.staticTexts["No check-ins yet"].waitForExistence(timeout: 5))
     }
 
@@ -67,7 +78,7 @@ final class MedTrackerUITests: XCTestCase {
         app.launchArguments = ["--ui-testing", "--reset-ui-testing", "--seed-due-doses"]
         app.launch()
         XCTAssertTrue(app.staticTexts["2 due doses"].waitForExistence(timeout: 10))
-        app.tabBars.buttons["Settings"].tap()
+        app.buttons["Settings"].tap()
         let testMode = app.buttons["settings.test-mode"]
         for _ in 0..<5 {
             if testMode.isHittable { break }
@@ -88,7 +99,7 @@ final class MedTrackerUITests: XCTestCase {
         app.buttons["practice.end-today"].tap()
         XCTAssertTrue(app.staticTexts["2 due doses"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.descendants(matching: .any)["practice.banner"].firstMatch.exists)
-        app.tabBars.buttons["History"].tap()
+        app.buttons["History"].tap()
         XCTAssertTrue(app.staticTexts["No check-ins yet"].waitForExistence(timeout: 5))
     }
 
@@ -126,7 +137,7 @@ final class MedTrackerUITests: XCTestCase {
         app.launchArguments = ["--ui-testing", "--reset-ui-testing", "--seed-due-doses"]
         app.launch()
         XCTAssertTrue(app.staticTexts["2 due doses"].waitForExistence(timeout: 10))
-        app.tabBars.buttons["Settings"].tap()
+        app.buttons["Settings"].tap()
         let diagnostics = app.buttons["settings.diagnostics"]
         for _ in 0..<5 {
             if diagnostics.isHittable { break }
@@ -167,7 +178,7 @@ final class MedTrackerUITests: XCTestCase {
         app.terminate()
         app.launchArguments = ["--ui-testing"]
         app.launch()
-        app.tabBars.buttons["History"].tap()
+        app.buttons["History"].tap()
         XCTAssertTrue(app.staticTexts["Taken"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Skipped"].exists)
     }
@@ -181,7 +192,7 @@ final class MedTrackerUITests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 10))
         if !start.isHittable { app.swipeUp() }
         start.tap()
-        app.tabBars.buttons["Medications"].tap()
+        app.buttons["Medications"].tap()
         app.buttons["medications.add"].tap()
         let name = app.textFields["medication.name"]
         XCTAssertTrue(name.waitForExistence(timeout: 5))
@@ -192,7 +203,7 @@ final class MedTrackerUITests: XCTestCase {
         dose.typeText("One tablet")
         app.buttons["medication.save"].tap()
         XCTAssertTrue(app.buttons.containing(.staticText, identifier: "Daily test medication").firstMatch.waitForExistence(timeout: 5))
-        app.tabBars.buttons["Settings"].tap()
+        app.buttons["Settings"].tap()
         let pause = app.switches["settings.pause"]
         XCTAssertTrue(pause.waitForExistence(timeout: 5))
         XCTAssertTrue(pause.isEnabled)
@@ -203,9 +214,9 @@ final class MedTrackerUITests: XCTestCase {
         app.terminate()
         app.launchArguments = ["--ui-testing"]
         app.launch()
-        app.tabBars.buttons["Medications"].tap()
+        app.buttons["Medications"].tap()
         XCTAssertTrue(app.staticTexts["Daily test medication"].waitForExistence(timeout: 5))
-        app.tabBars.buttons["Settings"].tap()
+        app.buttons["Settings"].tap()
         XCTAssertEqual(app.switches["settings.pause"].value as? String, "1")
     }
 }
