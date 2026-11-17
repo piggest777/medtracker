@@ -52,3 +52,11 @@ jobs:
           -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.2' \
           -derivedDataPath build \
           CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload failed UI test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-test-results
+          path: build/Logs/Test/
+          retention-days: 3
