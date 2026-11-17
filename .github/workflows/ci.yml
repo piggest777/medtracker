@@ -28,3 +28,27 @@ jobs:
         run: swift build -v
       - name: Run tests
         run: swift test -v
+
+
+  ui-tests:
+    runs-on: xcode-27
+
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain version
+        run: |
+          swift --version
+          xcodebuild -version
+
+      - name: Run UI tests
+        run: |
+          xcodebuild test \
+          -project "MedTracker.xcodeproj" \
+          -scheme "MedTracker" \
+          -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.2' \
+          -derivedDataPath build \
+          CODE_SIGNING_ALLOWED=NO
