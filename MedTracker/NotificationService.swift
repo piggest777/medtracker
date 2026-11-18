@@ -23,7 +23,15 @@ enum NotificationService {
     static let testAlertIdentifier = "medtracker.test-alert"
 
     static func requestPermission() async throws -> Bool {
-        try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+        Diagnostics.record("Notifications", "authorization request started options=alert,sound")
+        do {
+            let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+            Diagnostics.record("Notifications", "authorization request completed granted=\(granted)")
+            return granted
+        } catch {
+            Diagnostics.record("Notifications", "authorization request failed: \(Diagnostics.errorSummary(error))")
+            throw error
+        }
     }
 
     static func makeContent(title: String, body: String) -> UNMutableNotificationContent {
@@ -36,6 +44,7 @@ enum NotificationService {
     }
 
     static func timeSensitiveStatus() async -> String {
+        Diagnostics.record("Notifications", "notification settings request started source=time-sensitive-status")
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         Diagnostics.record("Notifications", "authorization=\(settings.authorizationStatus.rawValue) timeSensitiveSetting=\(settings.timeSensitiveSetting.rawValue) soundSetting=\(settings.soundSetting.rawValue)")
         guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else {
@@ -54,9 +63,13 @@ enum NotificationService {
         let request = UNNotificationRequest(identifier: testAlertIdentifier, content: content,
                                             trigger: UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false))
         let center = UNUserNotificationCenter.current()
+        Diagnostics.record("Notifications", "test alert add started delaySeconds=5 interruptionLevel=\(content.interruptionLevel.rawValue)")
         try await center.add(request)
         Diagnostics.record("Notifications", "test alert scheduled delaySeconds=5 interruptionLevel=\(content.interruptionLevel.rawValue)")
-        if let saved = await center.pendingNotificationRequests().first(where: { $0.identifier == testAlertIdentifier }) {
+        Diagnostics.record("Notifications", "test alert pending request readback started")
+        let pending = await center.pendingNotificationRequests()
+        Diagnostics.record("Notifications", "test alert pending request readback completed requestCount=\(pending.count)")
+        if let saved = pending.first(where: { $0.identifier == testAlertIdentifier }) {
             Diagnostics.record("Notifications", "test alert readback interruptionLevel=\(saved.content.interruptionLevel.rawValue)")
         }
     }
