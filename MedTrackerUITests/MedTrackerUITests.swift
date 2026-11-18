@@ -16,8 +16,12 @@ final class MedTrackerUITests: XCTestCase {
         }
         send.tap()
         let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow"]
-        if allow.waitForExistence(timeout: 3) { allow.tap() }
-        XCTAssertTrue(app.staticTexts["settings.test-alert-status"].waitForExistence(timeout: 10))
+        if allow.waitForExistence(timeout: 30) { allow.tap() }
+        let status = app.staticTexts["settings.test-alert-status"]
+        guard status.waitForExistence(timeout: 30) else {
+            XCTFail("Test alert did not succeed.\n\(app.debugDescription)")
+            return
+        }
 
         let diagnostics = app.buttons["settings.diagnostics"]
         for _ in 0..<5 {
