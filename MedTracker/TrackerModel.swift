@@ -10,6 +10,7 @@ final class TrackerModel: ObservableObject {
     @Published private(set) var now = Date()
     @Published private(set) var isWorking = false
     @Published private(set) var isLoaded = false
+    @Published private(set) var isStatusRefreshing = false
     @Published private(set) var storageError: String?
     @Published private(set) var notificationStatus = "Not requested"
     @Published private(set) var timeSensitiveStatus = "Not requested"
@@ -214,9 +215,22 @@ final class TrackerModel: ObservableObject {
                 notificationStatus = "Could not schedule reminders: \(error.localizedDescription)"
             }
             Diagnostics.record("Notifications", "configuration finished")
-            timeSensitiveStatus = await NotificationService.timeSensitiveStatus()
         }
         return true
+    }
+
+    func refreshTimeSensitiveStatus() async {
+        guard !isStatusRefreshing else {
+            return
+        }
+
+        defer {
+            isStatusRefreshing = false
+        }
+        isStatusRefreshing = true
+        Diagnostics.record("Status refreshing", "refreshing begin")
+        timeSensitiveStatus = await NotificationService.timeSensitiveStatus()
+        Diagnostics.record("Status refreshing", "refreshing ended")
     }
 
     func save(_ medication: Medication) async -> Bool {
@@ -289,6 +303,7 @@ final class TrackerModel: ObservableObject {
         do {
             _ = try await NotificationService.requestPermission()
             await refresh()
+            await refreshTimeSensitiveStatus()
         } catch { self.error = "Notifications could not be enabled: \(error.localizedDescription)" }
     }
 

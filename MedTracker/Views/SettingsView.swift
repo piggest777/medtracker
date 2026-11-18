@@ -54,7 +54,12 @@ struct SettingsView: View {
                     LabeledContent("Notifications", value: model.notificationStatus)
                     LabeledContent("Time Sensitive", value: model.timeSensitiveStatus)
                     Button("Enable notifications") { Task { await model.requestNotifications() } }
-                    Button("Send test alert", systemImage: "bell.badge") { Task { await model.sendTestAlert() } }
+                    Button("Send test alert", systemImage: "bell.badge") {
+                        Task {
+                          await model.sendTestAlert()
+                          await model.refreshTimeSensitiveStatus()
+                        }
+                    }
                         .disabled(model.isSendingTestAlert)
                         .accessibilityIdentifier("settings.test-alert")
                     if let status = model.testAlertStatus {

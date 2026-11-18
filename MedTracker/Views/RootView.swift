@@ -18,10 +18,16 @@ struct RootView: View {
             appContent
             #endif
         }
-        .task { await model.refresh(source: "launch") }
+        .task {
+            await model.refresh(source: "launch")
+            await model.refreshTimeSensitiveStatus()
+        }
         .onChange(of: scenePhase) { _, phase in
             Diagnostics.record("Lifecycle", "scene phase=\(String(describing: phase))")
-            if phase == .active { Task { await model.refresh(source: "foreground") } }
+            if phase == .active { Task {
+                await model.refresh(source: "foreground")
+                await model.refreshTimeSensitiveStatus()
+            } }
         }
         .onReceive(timer) { _ in
             guard scenePhase == .active else { return }
