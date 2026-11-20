@@ -95,13 +95,18 @@ final class MedTrackerUITests: XCTestCase {
         app.terminate()
         app.launchArguments = ["--ui-testing"]
         app.launch()
-        XCTAssertTrue(app.descendants(matching: .any)["practice.banner"].firstMatch.waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["1 practice dose due"].exists)
+        // Query the concrete control instead of traversing every accessibility element.
+        let endTest = app.buttons["practice.end-today"]
+        guard endTest.waitForExistence(timeout: 10) else {
+            XCTFail("Practice mode was not restored after relaunch")
+            return
+        }
+        XCTAssertTrue(app.staticTexts["1 practice dose due"].waitForExistence(timeout: 5))
         app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'practice.skipped.'")).firstMatch.tap()
         XCTAssertTrue(app.descendants(matching: .any)["practice.complete"].firstMatch.waitForExistence(timeout: 5))
-        app.buttons["practice.end-today"].tap()
+        endTest.tap()
         XCTAssertTrue(app.staticTexts["2 due doses"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.descendants(matching: .any)["practice.banner"].firstMatch.exists)
+        XCTAssertFalse(endTest.exists)
         app.buttons["History"].tap()
         XCTAssertTrue(app.staticTexts["No check-ins yet"].waitForExistence(timeout: 5))
     }
