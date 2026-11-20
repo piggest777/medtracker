@@ -1,31 +1,19 @@
 import Foundation
 import UserNotifications
 
-final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                didReceive response: UNNotificationResponse) async {
-        await MainActor.run {
-            NotificationCenter.default.post(name: .openToday, object: nil)
-        }
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        [.banner, .sound, .list]
-    }
-}
-
-extension Notification.Name {
-    static let openToday = Notification.Name("MedTracker.openToday")
-}
-
-enum NotificationService {
+@MainActor
+struct NotificationService {
     static let testAlertIdentifier = "medtracker.test-alert"
+    private let center: any NotificationCenterClient
 
-    static func requestPermission() async throws -> Bool {
+    init(center: any NotificationCenterClient = SystemNotificationCenter()) {
+        self.center = center
+    }
+
+    func requestPermission() async throws -> Bool {
         Diagnostics.record("Notifications", "authorization request started options=alert,sound")
         do {
-            let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+            let granted = try await center.requestAuthorization()
             Diagnostics.record("Notifications", "authorization request completed granted=\(granted)")
             return granted
         } catch {
@@ -43,9 +31,9 @@ enum NotificationService {
         return content
     }
 
-    static func timeSensitiveStatus() async -> String {
+    func timeSensitiveStatus() async -> String {
         Diagnostics.record("Notifications", "notification settings request started source=time-sensitive-status")
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        let settings = await center.settings()
         Diagnostics.record("Notifications", "authorization=\(settings.authorizationStatus.rawValue) timeSensitiveSetting=\(settings.timeSensitiveSetting.rawValue) soundSetting=\(settings.soundSetting.rawValue)")
         guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else {
             return settings.authorizationStatus == .notDetermined ? "Not requested" : "Notifications disabled"
@@ -58,29 +46,26 @@ enum NotificationService {
         }
     }
 
-    static func sendTestAlert() async throws {
-        let content = makeContent(title: "Test medication reminder", body: "This is a test alert from MedTracker. No medication is needed.")
-        let request = UNNotificationRequest(identifier: testAlertIdentifier, content: content,
+    func sendTestAlert() async throws {
+        let content = Self.makeContent(title: "Test medication reminder", body: "This is a test alert from MedTracker. No medication is needed.")
+        let request = UNNotificationRequest(identifier: Self.testAlertIdentifier, content: content,
                                             trigger: UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false))
-        let center = UNUserNotificationCenter.current()
         Diagnostics.record("Notifications", "test alert add started delaySeconds=5 interruptionLevel=\(content.interruptionLevel.rawValue)")
         try await center.add(request)
         Diagnostics.record("Notifications", "test alert scheduled delaySeconds=5 interruptionLevel=\(content.interruptionLevel.rawValue)")
         Diagnostics.record("Notifications", "test alert pending request readback started")
-        let pending = await center.pendingNotificationRequests()
+        let pending = await center.pendingRequests()
         Diagnostics.record("Notifications", "test alert pending request readback completed requestCount=\(pending.count)")
-        if let saved = pending.first(where: { $0.identifier == testAlertIdentifier }) {
+        if let saved = pending.first(where: { $0.identifier == Self.testAlertIdentifier }) {
             Diagnostics.record("Notifications", "test alert readback interruptionLevel=\(saved.content.interruptionLevel.rawValue)")
         }
     }
 
-    static func configure(_ state: TrackerState) async throws -> String {
-        guard !AppEnvironment.isUITesting else { return "Not requested" }
-        let center = UNUserNotificationCenter.current()
-        let settings = await center.notificationSettings()
-        let pending = await center.pendingNotificationRequests()
-        let ours = pending.filter { $0.identifier.hasPrefix("medtracker.") && $0.identifier != testAlertIdentifier }.map(\.identifier)
-        center.removePendingNotificationRequests(withIdentifiers: ours)
+    func configure(_ state: TrackerState) async throws -> String {
+        let settings = await center.settings()
+        let pending = await center.pendingRequests()
+        let ours = pending.filter { $0.identifier.hasPrefix("medtracker.") && $0.identifier != Self.testAlertIdentifier }.map(\.identifier)
+        center.removePendingRequests(withIdentifiers: ours)
         guard state.preferences.notificationsEnabled else { return "Off" }
         guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else {
             return settings.authorizationStatus == .notDetermined ? "Not requested" : "Disabled in iOS Settings"
@@ -91,7 +76,7 @@ enum NotificationService {
                     let body = state.preferences.revealMedicationNames
                         ? "Review your reminder for \(medication.name)."
                         : "Open MedTracker to review your medication reminder."
-                    let content = makeContent(title: "Time for a check-in", body: body)
+                    let content = Self.makeContent(title: "Time for a check-in", body: body)
                     let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: time.hour, minute: time.minute), repeats: true)
                     let request = UNNotificationRequest(identifier: "medtracker.\(medication.id).\(time.id)", content: content, trigger: trigger)
                     try await center.add(request)
@@ -99,10 +84,10 @@ enum NotificationService {
             }
         } catch {
             // Do not leave a partially installed schedule presented as fully enabled.
-            let partial = await center.pendingNotificationRequests().filter {
-                $0.identifier.hasPrefix("medtracker.") && $0.identifier != testAlertIdentifier
+            let partial = await center.pendingRequests().filter {
+                $0.identifier.hasPrefix("medtracker.") && $0.identifier != Self.testAlertIdentifier
             }.map(\.identifier)
-            center.removePendingNotificationRequests(withIdentifiers: partial)
+            center.removePendingRequests(withIdentifiers: partial)
             throw error
         }
         return "Enabled"

@@ -7,7 +7,9 @@ struct MedTrackerApp: App {
     private let notificationDelegate = NotificationDelegate()
 
     init() {
-        UNUserNotificationCenter.current().delegate = notificationDelegate
+        if !AppEnvironment.isUITesting {
+            UNUserNotificationCenter.current().delegate = notificationDelegate
+        }
     }
 
     var body: some Scene {

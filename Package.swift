@@ -6,7 +6,8 @@ let package = Package(
     platforms: [.macOS(.v13), .iOS(.v17)],
     products: [.library(name: "MedTrackerCore", targets: ["MedTrackerCore"])],
     targets: [
-        .target(name: "MedTrackerCore", path: "Shared/Core"),
+        .target(name: "MedTrackerCore", path: "Shared", exclude: ["ScreenTime"],
+                sources: ["Core", "Notifications"]),
         .testTarget(name: "MedTrackerCoreTests", dependencies: ["MedTrackerCore"], path: "Tests/MedTrackerCoreTests")
     ]
 )

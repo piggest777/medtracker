@@ -42,6 +42,7 @@ Simulator runs support medication tracking, settings, and history. Screen Time a
 ## Architecture
 
 - `Shared/Core`: Foundation-only data models, daily occurrence engine, and a versioned Codable JSON store. This is also a standalone Swift package for fast tests.
+- `Shared/Notifications`: reminder scheduling and a notification-center interface. The Swift package tests this logic with a test client; the app uses Apple's notification center.
 - `Shared/ScreenTime`: individual Family Controls authorization state, opaque picker token persistence, a named ManagedSettings store, and recurring DeviceActivity registration.
 - `MedTracker`: SwiftUI onboarding, Today, medication editing, history, settings, and local notifications.
 - `MonitorExtension`: reconciles persisted state at interval start/end and applies shields. It uses the same engine as the app.
@@ -70,6 +71,8 @@ xcodebuild -project MedTracker.xcodeproj -scheme MedTracker \
 Core tests cover overlapping doses, future doses, midnight, several days offline, idempotent reports, editing/deletion, pause semantics, DST, zone changes, persistence, corrupt/newer-schema files, failed transactions, and concurrent store clients. Simulator UI tests cover onboarding, adding a medication, pausing, due-dose check-ins, history, diagnostics, and persistence across relaunch. A layout regression exercises compact app rows and readable badges in dark mode and with accessibility text sizes, using representative labels because real Screen Time tokens require a device. Simulator-only launch fixtures use an isolated temporary store and cannot activate on a physical device.
 
 Core regression coverage also includes queued selection saves during busy updates, unresolved authorization preserving selections, confirmed denial clearing invalid tokens, and read-only diagnostics. A signed install and actual Screen Time enforcement require the hardware checklist below.
+
+Notification tests verify Time Sensitive content, the five-second test trigger, recurring daily triggers, medication-name privacy, preserving unrelated/test alerts, and cleanup after scheduling failures. UI tests inject an in-memory notification center in Debug simulator builds with `--ui-testing`, so they check the scheduling flow and confirmation without depending on system permission dialogs. Diagnostics explicitly identifies this client. These tests do not establish iOS authorization or notification delivery; verify those on a physical iPhone using **Send test alert**.
 
 ## Test without pills or waiting
 

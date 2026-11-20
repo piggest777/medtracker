@@ -51,9 +51,7 @@ jobs:
           -scheme "MedTracker" \
           -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.2' \
           -derivedDataPath build \
-          CODE_SIGN_IDENTITY=- \
-          CODE_SIGNING_ALLOWED=YES \
-          DEVELOPMENT_TEAM=
+          CODE_SIGNING_ALLOWED=NO
 
       - name: Upload failed UI test results
         if: failure()

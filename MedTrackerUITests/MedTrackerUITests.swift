@@ -3,7 +3,7 @@ import UserNotifications
 
 final class MedTrackerUITests: XCTestCase {
     @MainActor
-    func testTimeSensitiveAlertIsSavedToNotificationCenter() throws {
+    func testTestAlertSchedulingShowsConfirmation() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "--reset-ui-testing", "--seed-due-doses"]
         app.launch()
@@ -15,10 +15,8 @@ final class MedTrackerUITests: XCTestCase {
             app.swipeUp()
         }
         send.tap()
-        let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow"]
-        if allow.waitForExistence(timeout: 30) { allow.tap() }
         let status = app.staticTexts["settings.test-alert-status"]
-        guard status.waitForExistence(timeout: 30) else {
+        guard status.waitForExistence(timeout: 10) else {
             XCTFail("Test alert did not succeed.\n\(app.debugDescription)")
             return
         }
@@ -31,6 +29,7 @@ final class MedTrackerUITests: XCTestCase {
         diagnostics.tap()
         let report = app.staticTexts["diagnostics.report"]
         XCTAssertTrue(report.waitForExistence(timeout: 5))
+        XCTAssertTrue(report.label.contains("using in-memory notification center for UI testing"))
         XCTAssertTrue(report.label.contains("test alert readback interruptionLevel=\(UNNotificationInterruptionLevel.timeSensitive.rawValue)"))
     }
 

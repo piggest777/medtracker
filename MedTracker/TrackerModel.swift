@@ -20,6 +20,7 @@ final class TrackerModel: ObservableObject {
     @Published var error: String?
     @Published var selectedTab = 0
     private let updateGate = UpdateGate()
+    private let notifications = AppEnvironment.makeNotificationService()
     private var authorizationObserver: AnyCancellable?
 
     init() {
@@ -209,7 +210,7 @@ final class TrackerModel: ObservableObject {
         }
         if updateReminders {
             Diagnostics.record("Notifications", "configuration started")
-            do { notificationStatus = try await NotificationService.configure(state) }
+            do { notificationStatus = try await notifications.configure(state) }
             catch {
                 Diagnostics.record("Notifications", "configuration failed: \(Diagnostics.errorSummary(error))")
                 notificationStatus = "Could not schedule reminders: \(error.localizedDescription)"
@@ -229,7 +230,7 @@ final class TrackerModel: ObservableObject {
         }
         isStatusRefreshing = true
         Diagnostics.record("Status refreshing", "refreshing begin")
-        timeSensitiveStatus = await NotificationService.timeSensitiveStatus()
+        timeSensitiveStatus = await notifications.timeSensitiveStatus()
         Diagnostics.record("Status refreshing", "refreshing ended")
     }
 
@@ -301,7 +302,7 @@ final class TrackerModel: ObservableObject {
 
     func requestNotifications() async {
         do {
-            _ = try await NotificationService.requestPermission()
+            _ = try await notifications.requestPermission()
             await refresh()
             await refreshTimeSensitiveStatus()
         } catch { self.error = "Notifications could not be enabled: \(error.localizedDescription)" }
@@ -313,13 +314,13 @@ final class TrackerModel: ObservableObject {
         testAlertStatus = nil
         defer { isSendingTestAlert = false }
         do {
-            let granted = try await NotificationService.requestPermission()
+            let granted = try await notifications.requestPermission()
             guard granted else {
                 error = "Allow notifications for MedTracker in iOS Settings, then try again."
                 await refresh()
                 return
             }
-            try await NotificationService.sendTestAlert()
+            try await notifications.sendTestAlert()
             testAlertStatus = "Test alert scheduled with a 5-second delay."
             // Daily rescheduling deliberately preserves the separate one-off test request.
             await refresh()
