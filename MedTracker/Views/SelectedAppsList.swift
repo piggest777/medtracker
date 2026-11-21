@@ -2,7 +2,7 @@ import SwiftUI
 import FamilyControls
 
 struct SelectedAppsList: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
 
     var body: some View {
         let selection = model.selection

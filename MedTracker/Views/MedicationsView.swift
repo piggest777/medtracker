@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MedicationsView: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
     @State private var editing: Medication?
     @State private var adding = false
     @State private var deleting: Medication?
@@ -52,7 +52,7 @@ struct MedicationsView: View {
 }
 
 struct MedicationEditor: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
     @Environment(\.dismiss) private var dismiss
     let medication: Medication?
     @State private var name: String

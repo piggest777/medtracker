@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TestModeView: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
 
     var body: some View {
         Form {
@@ -77,7 +77,7 @@ struct TestModeView: View {
 }
 
 struct PracticeDosesSection: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
 
     var body: some View {
         if let practice = model.state.practiceSession {
@@ -102,7 +102,7 @@ struct PracticeDosesSection: View {
 }
 
 private struct PracticeDoseRow: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
     let dose: PracticeDose
 
     var body: some View {

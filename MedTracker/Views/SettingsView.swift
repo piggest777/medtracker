@@ -2,7 +2,7 @@ import SwiftUI
 import FamilyControls
 
 struct SettingsView: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
     @Environment(\.openURL) private var openURL
     @State private var showingPicker = false
     @State private var draftSelection = FamilyActivitySelection()

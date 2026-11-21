@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HistoryView: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
 
     var body: some View {
         NavigationStack {

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TodayView: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
 
     var body: some View {
         NavigationStack {
@@ -74,7 +74,7 @@ struct TodayView: View {
 }
 
 struct DoseRow: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
     let occurrence: DoseOccurrence
     var canReport = false
     @State private var confirmSkip = false

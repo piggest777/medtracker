@@ -5,22 +5,25 @@ import UserNotifications
 import Combine
 
 @MainActor
-final class TrackerModel: ObservableObject {
-    @Published private(set) var state = TrackerState()
-    @Published private(set) var now = Date()
-    @Published private(set) var isWorking = false
-    @Published private(set) var isLoaded = false
-    @Published private(set) var isStatusRefreshing = false
-    @Published private(set) var storageError: String?
-    @Published private(set) var notificationStatus = "Not requested"
-    @Published private(set) var timeSensitiveStatus = "Not requested"
-    @Published private(set) var isSendingTestAlert = false
-    @Published private(set) var testAlertStatus: String?
-    @Published private(set) var appliedShields = AppliedShields()
-    @Published var error: String?
-    @Published var selectedTab = 0
+@Observable
+final class TrackerModel {
+    private(set) var state = TrackerState()
+    private(set) var now = Date()
+    private(set) var isWorking = false
+    private(set) var isLoaded = false
+    private(set) var isStatusRefreshing = false
+    private(set) var storageError: String?
+    private(set) var notificationStatus = "Not requested"
+    private(set) var timeSensitiveStatus = "Not requested"
+    private(set) var isSendingTestAlert = false
+    private(set) var testAlertStatus: String?
+    private(set) var appliedShields = AppliedShields()
+    var error: String?
+    var selectedTab = 0
     private let updateGate = UpdateGate()
     private let notifications = AppEnvironment.makeNotificationService()
+
+    @ObservationIgnored
     private var authorizationObserver: AnyCancellable?
 
     init() {

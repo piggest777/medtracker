@@ -3,7 +3,7 @@ import UserNotifications
 
 @main
 struct MedTrackerApp: App {
-    @StateObject private var model = TrackerModel()
+    @State private var model = TrackerModel()
     private let notificationDelegate = NotificationDelegate()
 
     init() {
@@ -15,7 +15,7 @@ struct MedTrackerApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environmentObject(model)
+                .environment(model)
                 .tint(.teal)
         }
     }

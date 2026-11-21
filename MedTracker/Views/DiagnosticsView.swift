@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DiagnosticsView: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
     @State private var report = ""
     @State private var copied = false
 

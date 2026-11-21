@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct RootView: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
     @Environment(\.scenePhase) private var scenePhase
     private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -43,7 +43,8 @@ struct RootView: View {
     }
 
     private var appContent: some View {
-        Group {
+        @Bindable var bindableModel = model
+        return Group {
             if !model.isLoaded {
                 if let issue = model.storageError {
                     ContentUnavailableView {
@@ -57,7 +58,7 @@ struct RootView: View {
             } else if !model.state.preferences.hasCompletedOnboarding {
                 OnboardingView()
             } else {
-                TabView(selection: $model.selectedTab) {
+                TabView(selection: $bindableModel.selectedTab) {
                     TodayView().tabItem { Label("Today", systemImage: "sun.max") }.tag(0)
                     MedicationsView().tabItem { Label("Medications", systemImage: "pills") }.tag(1)
                     HistoryView().tabItem { Label("History", systemImage: "clock.arrow.circlepath") }.tag(2)
@@ -70,7 +71,7 @@ struct RootView: View {
 }
 
 struct OnboardingView: View {
-    @EnvironmentObject private var model: TrackerModel
+    @Environment(TrackerModel.self) private var model: TrackerModel
 
     var body: some View {
         NavigationStack {
