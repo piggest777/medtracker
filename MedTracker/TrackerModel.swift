@@ -21,12 +21,14 @@ final class TrackerModel {
     var error: String?
     var selectedTab = 0
     private let updateGate = UpdateGate()
-    private let notifications = AppEnvironment.makeNotificationService()
+    private let notifications: any NotificationServing
 
     @ObservationIgnored
     private var authorizationObserver: AnyCancellable?
 
-    init() {
+    init(notifications: any NotificationServing) {
+
+        self.notifications = notifications
         if AppEnvironment.isUITesting, ProcessInfo.processInfo.arguments.contains("--reset-ui-testing"),
            let store = try? AppEnvironment.makeStore() {
             try? FileManager.default.removeItem(at: store.url.deletingLastPathComponent())

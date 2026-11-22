@@ -2,7 +2,15 @@ import Foundation
 import UserNotifications
 
 @MainActor
-struct NotificationService {
+protocol NotificationServing {
+    func requestPermission() async throws -> Bool
+    func timeSensitiveStatus() async -> String
+    func sendTestAlert() async throws
+    func configure(_ state: TrackerState) async throws -> String
+}
+
+@MainActor
+struct NotificationService: NotificationServing {
     static let testAlertIdentifier = "medtracker.test-alert"
     private let center: any NotificationCenterClient
 

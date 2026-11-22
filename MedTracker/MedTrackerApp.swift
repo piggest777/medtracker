@@ -3,7 +3,7 @@ import UserNotifications
 
 @main
 struct MedTrackerApp: App {
-    @State private var model = TrackerModel()
+    @State private var model = TrackerModel(notifications: AppEnvironment.makeNotificationService())
     private let notificationDelegate = NotificationDelegate()
 
     init() {

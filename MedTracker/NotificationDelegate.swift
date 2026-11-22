@@ -21,7 +21,7 @@ extension Notification.Name {
 
 extension AppEnvironment {
     @MainActor
-    static func makeNotificationService() -> NotificationService {
+    static func makeNotificationService() -> any NotificationServing {
         #if DEBUG && targetEnvironment(simulator)
         if isUITesting {
             Diagnostics.record("Notifications", "using in-memory notification center for UI testing; no system requests")
