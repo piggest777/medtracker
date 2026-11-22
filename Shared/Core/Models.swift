@@ -8,12 +8,23 @@ struct DailyTime: Codable, Hashable, Comparable, Identifiable {
     static func < (lhs: Self, rhs: Self) -> Bool { lhs.id < rhs.id }
 }
 
+enum Weekday: Int, Codable, CaseIterable {
+    case monday = 1
+    case tuesday
+    case wednesday
+    case thursday
+    case friday
+    case saturday
+    case sunday
+}
+
 struct Medication: Codable, Identifiable, Equatable {
     var id: UUID = UUID()
     var name: String
     var dose: String = ""
     var times: [DailyTime]
     var effectiveFrom: Date
+    var weekdays: Set<Weekday> = Set(Weekday.allCases)
 }
 
 enum DoseOutcome: String, Codable, CaseIterable {
@@ -68,5 +79,22 @@ enum TrackerError: LocalizedError {
         case .unavailableContainer: return "The shared App Group is unavailable. Check signing and App Group configuration in all targets."
         case .unsupportedSchema: return "This data was saved by a newer version of MedTracker. Update the app before continuing."
         }
+    }
+}
+
+extension Medication {
+    enum CodingKeys: String, CodingKey {
+        case id, name, dose, times, effectiveFrom, weekdays
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        dose = try container.decode(String.self, forKey: .dose)
+        times = try container.decode([DailyTime].self, forKey: .times)
+        effectiveFrom = try container.decode(Date.self, forKey: .effectiveFrom)
+        weekdays = try container.decodeIfPresent(Set<Weekday>.self, forKey: .weekdays) ?? Set(Weekday.allCases)
     }
 }
