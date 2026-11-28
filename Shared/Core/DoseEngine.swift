@@ -27,10 +27,12 @@ enum DoseEngine {
         var day = min(previousDay, end)
         while day <= end {
             let key = dayKey(day, calendar: calendar)
+            let weekday = Weekday.from(day, calendar: calendar)
             for medication in state.medications {
                 for time in medication.times {
                     let date = scheduledDate(on: day, time: time, calendar: calendar)
                     guard date >= medication.effectiveFrom else { continue }
+                    if let weekday, medication.weekdays.contains(weekday) == false { continue }
                     let id = "\(medication.id.uuidString)|\(key)|\(time.id)"
                     guard known.insert(id).inserted else { continue }
                     state.occurrences.append(DoseOccurrence(

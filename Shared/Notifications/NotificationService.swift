@@ -80,14 +80,27 @@ struct NotificationService: NotificationServing {
         }
         do {
             for medication in state.medications {
+                let weekdays = medication.weekdays
+                let isDaily = weekdays == Set(Weekday.allCases)
+
                 for time in medication.times {
                     let body = state.preferences.revealMedicationNames
                         ? "Review your reminder for \(medication.name)."
                         : "Open MedTracker to review your medication reminder."
                     let content = Self.makeContent(title: "Time for a check-in", body: body)
-                    let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: time.hour, minute: time.minute), repeats: true)
-                    let request = UNNotificationRequest(identifier: "medtracker.\(medication.id).\(time.id)", content: content, trigger: trigger)
-                    try await center.add(request)
+                    if isDaily {
+                        let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: time.hour, minute: time.minute), repeats: true)
+                        let request = UNNotificationRequest(identifier: "medtracker.\(medication.id).\(time.id)", content: content, trigger: trigger)
+                        try await center.add(request)
+                    } else {
+                        for weekday in weekdays.sorted(by: { $0.rawValue < $1.rawValue }) {
+                            let components = DateComponents(hour: time.hour, minute: time.minute, weekday: weekday.rawValue)
+                            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+                            let identifier = "medtracker.\(medication.id).\(time.id).weekday.\(weekday.rawValue)"
+                            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                            try await center.add(request)
+                        }
+                    }
                 }
             }
         } catch {

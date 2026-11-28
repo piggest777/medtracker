@@ -9,13 +9,13 @@ struct DailyTime: Codable, Hashable, Comparable, Identifiable {
 }
 
 enum Weekday: Int, Codable, CaseIterable {
-    case monday = 1
+    case sunday = 1
+    case monday
     case tuesday
     case wednesday
     case thursday
     case friday
     case saturday
-    case sunday
 }
 
 struct Medication: Codable, Identifiable, Equatable {
@@ -96,5 +96,15 @@ extension Medication {
         times = try container.decode([DailyTime].self, forKey: .times)
         effectiveFrom = try container.decode(Date.self, forKey: .effectiveFrom)
         weekdays = try container.decodeIfPresent(Set<Weekday>.self, forKey: .weekdays) ?? Set(Weekday.allCases)
+    }
+}
+
+extension Weekday {
+    static func from(
+        _ date: Date,
+        calendar: Calendar = .current
+    ) -> Weekday? {
+        let number = calendar.component(.weekday, from: date)
+        return Weekday(rawValue: number)
     }
 }
